@@ -1,26 +1,28 @@
 #include <M5Unified.h>
+#include <Preferences.h>
 
+Preferences prefs;
 int counter = 0;
 int brightness = 32;
 const int brightLevels[] = {32, 64, 128, 200};
 int brightIdx = 0;
 
 unsigned long lastActivity = 0;
-unsigned long lastMovementCheck = 0;
 const unsigned long sleepTimeout = 600000;
-float baseAx = 0, baseAy = 0, baseAz = 0;
-const float moveThreshold = 0.4;
 
 void setup() {
     auto cfg = M5.config();
     M5.begin(cfg);
 
+    prefs.begin("tallycnt", false);
+    counter = prefs.getInt("counter", 0);
+    brightIdx = prefs.getInt("brightIdx", 0);
+    brightness = brightLevels[brightIdx];
+
     M5.Display.fillScreen(BLACK);
     M5.Display.setBrightness(brightness);
     M5.Speaker.setVolume(255);
-    M5.Imu.getAccel(&baseAx, &baseAy, &baseAz);
     lastActivity = millis();
-    lastMovementCheck = millis();
 
     drawCounter();
 }
@@ -75,22 +77,6 @@ void beep(int freq, int duration) {
     delay(duration);
 }
 
-void checkMovement() {
-    if (millis() - lastMovementCheck < 1000) return;
-    lastMovementCheck = millis();
-
-    float ax, ay, az;
-    M5.Imu.getAccel(&ax, &ay, &az);
-
-    float delta = abs(ax - baseAx) + abs(ay - baseAy) + abs(az - baseAz);
-    if (delta > moveThreshold) {
-        lastActivity = millis();
-        baseAx = ax;
-        baseAy = ay;
-        baseAz = az;
-    }
-}
-
 void loop() {
     M5.update();
 
@@ -98,6 +84,7 @@ void loop() {
         lastActivity = millis();
         counter++;
         if (counter > 999) counter = 999;
+        prefs.putInt("counter", counter);
         drawCounter();
         beep(3000, 50);
     }
@@ -105,6 +92,7 @@ void loop() {
     if (M5.BtnB.wasPressed()) {
         lastActivity = millis();
         counter = 0;
+        prefs.putInt("counter", counter);
         drawCounter();
         beep(4000, 60);
         delay(40);
@@ -116,10 +104,9 @@ void loop() {
     if (M5.BtnPWR.wasPressed()) {
         lastActivity = millis();
         brightIdx = (brightIdx + 1) % 4;
+        prefs.putInt("brightIdx", brightIdx);
         M5.Display.setBrightness(brightLevels[brightIdx]);
     }
-
-    checkMovement();
 
     if (millis() - lastActivity > sleepTimeout) {
         M5.Power.powerOff();
