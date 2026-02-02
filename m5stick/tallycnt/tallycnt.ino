@@ -101,7 +101,11 @@ void loop() {
         beep(4000, 60);
     }
 
-    if (M5.BtnPWR.wasPressed()) {
+    if (M5.BtnPWR.wasHold()) {
+        M5.Power.powerOff();
+    }
+
+    if (M5.BtnPWR.wasReleased() && !M5.BtnPWR.wasHold()) {
         lastActivity = millis();
         brightIdx = (brightIdx + 1) % 4;
         prefs.putInt("brightIdx", brightIdx);
