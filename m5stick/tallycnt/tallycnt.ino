@@ -47,27 +47,29 @@ void drawBattery() {
 }
 
 void drawCounter() {
-    M5.Display.setTextColor(YELLOW, BLACK);
+    char buf[5];
+    int size;
 
     if (counter < 10) {
         M5.Display.setRotation(0);
-        M5.Display.fillScreen(BLACK);
-        M5.Display.setTextSize(22);
-        M5.Display.setCursor(3, 20);
-        M5.Display.printf("%d", counter);
+        snprintf(buf, sizeof(buf), "%d", counter);
+        size = 4;
     } else if (counter < 100) {
         M5.Display.setRotation(1);
-        M5.Display.fillScreen(BLACK);
-        M5.Display.setTextSize(18);
-        M5.Display.setCursor(5, 10);
-        M5.Display.printf("%02d", counter);
+        snprintf(buf, sizeof(buf), "%02d", counter);
+        size = 3;
     } else {
         M5.Display.setRotation(1);
-        M5.Display.fillScreen(BLACK);
-        M5.Display.setTextSize(12);
-        M5.Display.setCursor(5, 25);
-        M5.Display.printf("%03d", counter);
+        snprintf(buf, sizeof(buf), "%03d", counter);
+        size = 2;
     }
+
+    M5.Display.fillScreen(BLACK);
+    M5.Display.setTextColor(YELLOW, BLACK);
+    M5.Display.setFont(&fonts::Font7);
+    M5.Display.setTextSize(size);
+    M5.Display.setTextDatum(middle_center);
+    M5.Display.drawString(buf, M5.Display.width()/2, M5.Display.height()/2);
 
     drawBattery();
 }
